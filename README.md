@@ -2,6 +2,13 @@
 
 A full-stack Kanban board application for managing tasks and projects, inspired by the Frontend Mentor design challenge.
 
+- Users own boards
+- Each board has n columns
+- Each column contains n tickets
+- Each ticket contains n tasks
+
+The status of a ticket (ready, in progress, complete) is derived from the column it belongs to.
+
 ## Project Structure
 
 ```
