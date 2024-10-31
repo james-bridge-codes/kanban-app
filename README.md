@@ -77,4 +77,4 @@ The frontend will be available at `http://localhost:5173` and the API at `http:/
 
 ## Attribution
 
-Design inspiration from [Frontend Mentor](https://www.frontendmentor.io/)
+Design by [Frontend Mentor](https://www.frontendmentor.io/)
