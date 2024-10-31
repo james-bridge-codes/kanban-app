@@ -21,6 +21,8 @@ export const authMiddleware: RequestHandler = async (
     const decoded = jwt.verify(token, JWT_SECRET) as UserPayload;
     req.user = { id: decoded.id };
 
+    console.log("setting user in middleware", req.user);
+
     next();
   } catch (error) {
     res.status(401).json({ message: "Invalid token" });
