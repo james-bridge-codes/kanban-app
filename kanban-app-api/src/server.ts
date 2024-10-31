@@ -1,6 +1,9 @@
 import express, { Express, Request, Response } from "express";
 import dotenv from "dotenv";
 import boardRoutes from "./routes/ver1/board.route";
+import columnRoutes from "./routes/ver1/column.route";
+import ticketRoutes from "./routes/ver1/ticket.route";
+import taskRoutes from "./routes/ver1/task.route";
 
 dotenv.config();
 
@@ -14,6 +17,9 @@ app.get("/", (req: Request, res: Response) => {
 });
 
 app.use("/api/v1/board", boardRoutes);
+app.use("/api/v1/column", columnRoutes);
+app.use("/api/v1/ticket", ticketRoutes);
+app.use("/api/v1/task", taskRoutes);
 
 app.listen(port, () => {
   console.log(`[server]: Server is running on port ${port}`);
