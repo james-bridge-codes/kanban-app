@@ -16,8 +16,6 @@ A full-stack Kanban board application for managing tasks and projects, inspired 
 ### Frontend
 
 - React (Vite)
-- React Router for navigation
-- Modern React practices (hooks, context)
 - Styled based on Frontend Mentor design
 
 ### Backend
