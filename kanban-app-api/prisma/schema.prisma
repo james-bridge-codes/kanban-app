@@ -12,10 +12,11 @@ datasource db {
 
 // USERS
 model User {
-  id     Int     @id @default(autoincrement())
-  email  String  @unique
-  name   String?
-  boards Board[]
+  id       Int     @id @default(autoincrement())
+  email    String  @unique
+  name     String?
+  password String
+  boards   Board[]
 }
 
 // BOARDS
