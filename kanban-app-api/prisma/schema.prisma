@@ -12,7 +12,7 @@ datasource db {
 
 // USERS
 model User {
-  id       Int     @id @default(autoincrement())
+  id       String  @id @default(uuid())
   email    String  @unique
   name     String?
   password String
@@ -21,42 +21,42 @@ model User {
 
 // BOARDS
 model Board {
-  id        Int      @id @default(autoincrement())
+  id        String   @id @default(uuid())
   title     String
   isDeleted Boolean
   columns   Column[]
   User      User?    @relation(fields: [userId], references: [id])
-  userId    Int?
+  userId    String?
 }
 
 // Columns
 model Column {
-  id        Int      @id @default(autoincrement())
+  id        String   @id @default(uuid())
   title     String
   isDeleted Boolean
   tickets   Ticket[]
   index     Int
   Board     Board?   @relation(fields: [boardId], references: [id])
-  boardId   Int?
+  boardId   String?
 }
 
 // TICKETS
 model Ticket {
-  id          Int     @id @default(autoincrement())
+  id          String  @id @default(uuid())
   title       String
   description String
   isDeleted   Boolean
   tasks       Task[]
   Column      Column? @relation(fields: [columnId], references: [id])
-  columnId    Int?
+  columnId    String?
 }
 
 // TASKS
 model Task {
-  id        Int     @id @default(autoincrement())
+  id        String  @id @default(uuid())
   title     String
   completed Boolean
   isDeleted Boolean
   Ticket    Ticket? @relation(fields: [ticketId], references: [id])
-  ticketId  Int?
+  ticketId  String?
 }
