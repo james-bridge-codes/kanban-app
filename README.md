@@ -16,7 +16,9 @@ A full-stack Kanban board application for managing tasks and projects, inspired 
 ### Frontend
 
 - React (Vite)
-- Styled based on Frontend Mentor design
+- Styles via CSS modules
+- Testing done via Vitest
+- Styled based on Frontend Mentor design found here: [Front-End-Mentor Page](https://www.frontendmentor.io/challenges/kanban-task-management-web-app-wgQLt-HlbB)
 
 ### Backend
 
@@ -24,6 +26,7 @@ A full-stack Kanban board application for managing tasks and projects, inspired 
 - SQLite database
 - Prisma ORM for database management
 - RESTful API design
+- Testing done via Vitest
 
 ## Getting Started
 
@@ -69,9 +72,8 @@ The frontend will be available at `http://localhost:5173` and the API at `http:/
 
 ## Development
 
-- Frontend code is in the `frontend/` directory
-- Backend code is in the `backend/` directory
-- Database schema is defined in `backend/prisma/schema.prisma`
+- Frontend code is in the `kanban-app-ui/` directory
+- Backend code is in the `kanban-app-api/` directory
 
 ## Attribution
 
