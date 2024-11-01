@@ -3,7 +3,6 @@ import type { Request, Response } from "express";
 import boardController from "../../src/controllers/board.controller";
 import { prisma } from "../../src/lib/prisma";
 import { UserPayload } from "../../src/types/auth.types";
-import test from "node:test";
 
 vi.mock("../../src/lib/prisma", () => ({
   prisma: {
@@ -132,6 +131,19 @@ describe("GET /boards", () => {
     });
   });
 
+  it("handles non-Error objects in error response", async () => {
+    mockReq.user = { id: authenticatedUserId };
+    vi.mocked(prisma.board.findMany).mockRejectedValue("string error");
+
+    await boardController.getAllBoards(mockReq, mockRes as Response);
+
+    expect(mockRes.status).toHaveBeenCalledWith(500);
+    expect(mockRes.json).toHaveBeenCalledWith({
+      message: "Error in board controller",
+      error: "Unknown error",
+    });
+  });
+
   it("should not return a board marked as deleted", () => {});
 });
 
@@ -217,6 +229,19 @@ describe("GET /boards:id", () => {
       error: "Database connection failed",
     });
   });
+
+  it("handles non-Error objects in error response", async () => {
+    mockReq.user = { id: authenticatedUserId };
+    vi.mocked(prisma.board.findUnique).mockRejectedValue("string error");
+
+    await boardController.getBoardByID(mockReq, mockRes as Response);
+
+    expect(mockRes.status).toHaveBeenCalledWith(500);
+    expect(mockRes.json).toHaveBeenCalledWith({
+      message: "Error in board controller",
+      error: "Unknown error",
+    });
+  });
 });
 
 describe("POST /boards", () => {
@@ -282,6 +307,20 @@ describe("POST /boards", () => {
     expect(mockRes.json).toHaveBeenCalledWith({
       message: "Failed to create new board",
       error: "Database connection failed",
+    });
+  });
+
+  it("handles non-Error objects in error response", async () => {
+    mockReq.user = { id: authenticatedUserId };
+    mockReq.body = { title: "A new title" };
+    vi.mocked(prisma.board.create).mockRejectedValue("string error");
+
+    await boardController.createBoard(mockReq, mockRes as Response);
+
+    expect(mockRes.status).toHaveBeenCalledWith(500);
+    expect(mockRes.json).toHaveBeenCalledWith({
+      message: "Failed to create new board",
+      error: "Unknown error",
     });
   });
 });
@@ -351,6 +390,22 @@ describe("PUT /boards:id", () => {
     expect(mockRes.json).toHaveBeenCalledWith({
       message: "Failed to update board",
       error: "Database connection failed",
+    });
+  });
+
+  it("handles non-Error objects in error response", async () => {
+    mockReq.user = { id: authenticatedUserId };
+    mockReq.params = { id: "100" };
+    mockReq.body = { title: "a new title" };
+
+    vi.mocked(prisma.board.update).mockRejectedValue("string error");
+
+    await boardController.updateBoard(mockReq, mockRes as Response);
+
+    expect(mockRes.status).toHaveBeenCalledWith(500);
+    expect(mockRes.json).toHaveBeenCalledWith({
+      message: "Failed to update board",
+      error: "Unknown error",
     });
   });
 });
@@ -439,6 +494,19 @@ describe("PUT /boards:id/soft-delete", () => {
       error: "Database connection failed",
     });
   });
+
+  it("handles non-Error objects in error response", async () => {
+    mockReq.user = { id: authenticatedUserId };
+    vi.mocked(prisma.board.update).mockRejectedValue("string error");
+
+    await boardController.softDeteleBoard(mockReq, mockRes as Response);
+
+    expect(mockRes.status).toHaveBeenCalledWith(500);
+    expect(mockRes.json).toHaveBeenCalledWith({
+      message: "Failed to delete board",
+      error: "Unknown error",
+    });
+  });
 });
 
 describe("DELETE /boards:id", () => {
@@ -517,6 +585,19 @@ describe("DELETE /boards:id", () => {
     expect(mockRes.json).toHaveBeenCalledWith({
       message: "Failed to delete board",
       error: "Database connection failed",
+    });
+  });
+
+  it("handles non-Error objects in error response", async () => {
+    mockReq.user = { id: authenticatedUserId };
+    vi.mocked(prisma.board.delete).mockRejectedValue("string error");
+
+    await boardController.hardDeleteBoard(mockReq, mockRes as Response);
+
+    expect(mockRes.status).toHaveBeenCalledWith(500);
+    expect(mockRes.json).toHaveBeenCalledWith({
+      message: "Failed to delete board",
+      error: "Unknown error",
     });
   });
 });
