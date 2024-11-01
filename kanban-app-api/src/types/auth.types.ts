@@ -4,6 +4,13 @@ export interface AuthRequest extends Request {
   user?: UserPayload;
 }
 
+export interface MockParamsRequest extends AuthRequest {
+  params: {
+    id: string;
+    boardId: string;
+  };
+}
+
 export interface UserPayload {
   id: string;
 }

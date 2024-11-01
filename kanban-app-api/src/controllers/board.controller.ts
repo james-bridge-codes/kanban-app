@@ -33,9 +33,7 @@ const boardController: BoardController = {
         res.status(404).json({ error: "Boards not found" });
       }
 
-      console.log("The result is: ", result);
-
-      res.status(200).send(result);
+      res.status(200).json(result);
     } catch (error) {
       res.status(500).json({
         message: "Error in board controller",
@@ -67,7 +65,7 @@ const boardController: BoardController = {
         res.status(404).json({ error: "Board not found" });
       }
 
-      res.status(200).send(result);
+      res.status(200).json(result);
     } catch (error) {
       res.status(500).json({
         message: "Error in board controller",
@@ -81,12 +79,17 @@ const boardController: BoardController = {
       const user = req.user;
 
       if (!user) {
-        res.send(401).json({ message: "Authentication failed" });
+        res.status(401).json({ message: "Authentication failed" });
         return;
       }
 
       const userId = user.id;
       const { title } = req.body;
+
+      if (title === undefined || title.length < 1) {
+        res.status(400).json({ message: "No title provided" });
+        return;
+      }
 
       const result = await prisma.board.create({
         data: {
@@ -100,8 +103,6 @@ const boardController: BoardController = {
           id: true,
         },
       });
-
-      console.log("about to send new board back", result);
 
       res.status(201).json(result);
     } catch (error) {
@@ -117,13 +118,18 @@ const boardController: BoardController = {
       const user = req.user;
 
       if (!user) {
-        res.send(401).json({ message: "Authentication failed" });
+        res.status(401).json({ message: "Authentication failed" });
         return;
       }
 
       const { id: boardId } = req.params;
       const userId = user.id;
       const { title } = req.body;
+
+      if (title === undefined || title.length < 1) {
+        res.status(400).json({ message: "No title provided" });
+        return;
+      }
 
       const result = await prisma.board.update({
         where: {
@@ -138,7 +144,7 @@ const boardController: BoardController = {
       res.status(200).json(result);
     } catch (error) {
       res.status(500).json({
-        message: "Failed to create new board",
+        message: "Failed to update board",
         error: error instanceof Error ? error.message : "Unknown error",
       });
     }
@@ -149,7 +155,7 @@ const boardController: BoardController = {
       const user = req.user;
 
       if (!user) {
-        res.send(401).json({ message: "Authentication failed" });
+        res.status(401).json({ message: "Authentication failed" });
         return;
       }
 
@@ -169,7 +175,7 @@ const boardController: BoardController = {
       res.status(200).json({ message: "Board successfully soft-deleted" });
     } catch (error) {
       res.status(500).json({
-        message: "Failed to create new board",
+        message: "Failed to delete board",
         error: error instanceof Error ? error.message : "Unknown error",
       });
     }
@@ -180,7 +186,7 @@ const boardController: BoardController = {
       const user = req.user;
 
       if (!user) {
-        res.send(401).json({ message: "Authentication failed" });
+        res.status(401).json({ message: "Authentication failed" });
         return;
       }
 
@@ -197,7 +203,7 @@ const boardController: BoardController = {
       res.status(204).json({ message: "Board successfully deleted" });
     } catch (error) {
       res.status(500).json({
-        message: "Failed to create new board",
+        message: "Failed to delete board",
         error: error instanceof Error ? error.message : "Unknown error",
       });
     }
