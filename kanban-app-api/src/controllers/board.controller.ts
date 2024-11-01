@@ -105,8 +105,6 @@ const boardController: BoardController = {
         },
       });
 
-      console.log("about to send new board back", result);
-
       res.status(201).json(result);
     } catch (error) {
       res.status(500).json({
@@ -121,13 +119,18 @@ const boardController: BoardController = {
       const user = req.user;
 
       if (!user) {
-        res.send(401).json({ message: "Authentication failed" });
+        res.status(401).json({ message: "Authentication failed" });
         return;
       }
 
       const { id: boardId } = req.params;
       const userId = user.id;
       const { title } = req.body;
+
+      if (title === undefined || title.length < 1) {
+        res.status(400).json({ message: "No title provided" });
+        return;
+      }
 
       const result = await prisma.board.update({
         where: {

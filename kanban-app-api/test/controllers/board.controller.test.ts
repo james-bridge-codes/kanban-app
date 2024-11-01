@@ -10,6 +10,7 @@ vi.mock("../../src/lib/prisma", () => ({
       findMany: vi.fn(),
       findUnique: vi.fn(),
       create: vi.fn(),
+      update: vi.fn(),
     },
   },
 }));
@@ -282,7 +283,7 @@ describe("Board Controller - getBoardByID", () => {
   });
 });
 
-describe("Board Controller - createBoard", () => {
+describe("Board Controller - create", () => {
   it("should return 401 if the user is not authenticated", async () => {
     const mockReq = {
       user: undefined,
@@ -398,5 +399,47 @@ describe("Board Controller - createBoard", () => {
       message: "Failed to create new board",
       error: "Database connection failed",
     });
+  });
+});
+
+describe("Board Controller - updated", () => {
+  it("shows a 401 error when user is not authenticated", async () => {
+    const mockReq = {
+      user: undefined,
+      params: {},
+      body: { title: "a new title" },
+      query: {},
+    } as Request;
+
+    const mockRes = {
+      status: vi.fn().mockReturnThis(),
+      json: vi.fn().mockReturnThis(),
+    } as Partial<Response>;
+
+    await boardController.updateBoard(mockReq, mockRes as Response);
+
+    expect(mockRes.status).toHaveBeenCalledWith(401);
+    expect(mockRes.json).toHaveBeenCalledWith({
+      message: "Authentication failed",
+    });
+  });
+
+  it("shows a 400 error if no title is provided", async () => {
+    const mockReq = {
+      user: { id: "test-user" },
+      params: {},
+      body: { title: "" },
+      query: {},
+    } as Request;
+
+    const mockRes = {
+      status: vi.fn().mockReturnThis(),
+      json: vi.fn().mockReturnThis(),
+    } as Partial<Response>;
+
+    await boardController.updateBoard(mockReq, mockRes as Response);
+
+    expect(mockRes.status).toHaveBeenCalledWith(400);
+    expect(mockRes.json).toHaveBeenCalledWith({ message: "No title provided" });
   });
 });
