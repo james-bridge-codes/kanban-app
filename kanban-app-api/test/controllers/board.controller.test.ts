@@ -442,4 +442,73 @@ describe("Board Controller - updated", () => {
     expect(mockRes.status).toHaveBeenCalledWith(400);
     expect(mockRes.json).toHaveBeenCalledWith({ message: "No title provided" });
   });
+
+  it("updates the title of the board when a title is provided", async () => {
+    const mockReq = {
+      user: { id: "test-user-id" },
+      params: { id: "001" },
+      body: { title: "A new title" },
+      query: {},
+    } as Partial<Request> as Request;
+
+    const mockRes = {
+      status: vi.fn().mockReturnThis(),
+      json: vi.fn().mockReturnThis(),
+    } as Partial<Response>;
+
+    const originalBoard = {
+      id: "001",
+      title: "board one",
+      isDeleted: false,
+      columns: [],
+      userId: "test-user-id",
+    };
+
+    const updatedBoard = {
+      ...originalBoard,
+      title: "A new title",
+    };
+
+    vi.mocked(prisma.board.update).mockResolvedValue(updatedBoard);
+
+    await boardController.updateBoard(mockReq, mockRes as Response);
+
+    expect(prisma.board.update).toHaveBeenCalledWith({
+      where: {
+        id: "001",
+        userId: "test-user-id",
+      },
+      data: {
+        title: "A new title",
+      },
+    });
+
+    expect(mockRes.status).toHaveBeenCalledWith(200);
+    expect(mockRes.json).toHaveBeenCalledWith(updatedBoard);
+  });
+
+  it("should return 500 when database creation fails", async () => {
+    const mockReq = {
+      user: { id: "test-user-id" },
+      params: { id: "001" },
+      body: { title: "A new title" },
+      query: {},
+    } as Partial<Request> as Request;
+
+    const mockRes = {
+      status: vi.fn().mockReturnThis(),
+      json: vi.fn().mockReturnThis(),
+    } as Partial<Response>;
+
+    const mockError = new Error("Database connection failed");
+    vi.mocked(prisma.board.update).mockRejectedValue(mockError);
+
+    await boardController.updateBoard(mockReq, mockRes as Response);
+
+    expect(mockRes.status).toHaveBeenCalledWith(500);
+    expect(mockRes.json).toHaveBeenCalledWith({
+      message: "Failed to create new board",
+      error: "Database connection failed",
+    });
+  });
 });
