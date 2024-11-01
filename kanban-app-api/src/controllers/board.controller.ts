@@ -33,9 +33,7 @@ const boardController: BoardController = {
         res.status(404).json({ error: "Boards not found" });
       }
 
-      console.log("The result is: ", result);
-
-      res.status(200).send(result);
+      res.status(200).json(result);
     } catch (error) {
       res.status(500).json({
         message: "Error in board controller",
@@ -67,7 +65,7 @@ const boardController: BoardController = {
         res.status(404).json({ error: "Board not found" });
       }
 
-      res.status(200).send(result);
+      res.status(200).json(result);
     } catch (error) {
       res.status(500).json({
         message: "Error in board controller",
