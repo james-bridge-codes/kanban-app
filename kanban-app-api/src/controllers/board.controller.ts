@@ -79,12 +79,18 @@ const boardController: BoardController = {
       const user = req.user;
 
       if (!user) {
-        res.send(401).json({ message: "Authentication failed" });
+        res.status(401).json({ message: "Authentication failed" });
         return;
       }
 
       const userId = user.id;
       const { title } = req.body;
+
+      if (title === undefined || title.length < 1) {
+        console.log("Short title");
+        res.status(400).json({ message: "No title provided" });
+        return;
+      }
 
       const result = await prisma.board.create({
         data: {

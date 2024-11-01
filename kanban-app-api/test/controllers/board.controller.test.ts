@@ -9,6 +9,7 @@ vi.mock("../../src/lib/prisma", () => ({
     board: {
       findMany: vi.fn(),
       findUnique: vi.fn(),
+      create: vi.fn(),
     },
   },
 }));
@@ -253,5 +254,149 @@ describe("Board Controller - getBoardByID", () => {
 
     expect(mockRes.status).toHaveBeenCalledWith(200);
     expect(mockRes.json).toHaveBeenCalledWith(boards[0]);
+  });
+
+  it("should return 500 when the database query fails", async () => {
+    const mockReq = {
+      user: { id: "test-user-id" },
+      params: { id: "001" },
+      body: {},
+      query: {},
+    } as Partial<Request> as Request;
+
+    const mockRes = {
+      status: vi.fn().mockReturnThis(),
+      json: vi.fn().mockReturnThis(),
+    } as Partial<Response>;
+
+    const mockError = new Error("Database connection failed");
+    vi.mocked(prisma.board.findUnique).mockRejectedValue(mockError);
+
+    await boardController.getBoardByID(mockReq, mockRes as Response);
+
+    expect(mockRes.status).toHaveBeenCalledWith(500);
+    expect(mockRes.json).toHaveBeenCalledWith({
+      message: "Error in board controller",
+      error: "Database connection failed",
+    });
+  });
+});
+
+describe("Board Controller - createBoard", () => {
+  it("should return 401 if the user is not authenticated", async () => {
+    const mockReq = {
+      user: undefined,
+      params: {},
+      body: {
+        title: "New Board",
+      },
+      query: {},
+    } as Partial<Request> as Request;
+
+    const mockRes = {
+      status: vi.fn().mockReturnThis(),
+      json: vi.fn().mockReturnThis(),
+    } as Partial<Response>;
+
+    await boardController.createBoard(mockReq, mockRes as Response);
+
+    expect(mockRes.status).toHaveBeenCalledWith(401);
+    expect(mockRes.json).toHaveBeenCalledWith({
+      message: "Authentication failed",
+    });
+  });
+
+  it("should return 400 if no title is provided", async () => {
+    const mockReq = {
+      user: { id: "test-user-id" },
+      params: {},
+      body: {
+        title: "",
+      },
+      query: {},
+    } as Partial<Request> as Request;
+
+    const mockRes = {
+      status: vi.fn().mockReturnThis(),
+      json: vi.fn().mockReturnThis(),
+    } as Partial<Response>;
+
+    await boardController.createBoard(mockReq, mockRes as Response);
+
+    expect(mockRes.status).toHaveBeenCalledWith(400);
+    expect(mockRes.json).toHaveBeenCalledWith({
+      message: "No title provided",
+    });
+  });
+
+  it("should create a new board when user is authenticated and title is provided", async () => {
+    const mockReq = {
+      user: { id: "test-user-id" },
+      params: {},
+      body: {
+        title: "My New Board",
+      },
+      query: {},
+    } as Partial<Request> as Request;
+
+    const mockRes = {
+      status: vi.fn().mockReturnThis(),
+      json: vi.fn().mockReturnThis(),
+    } as Partial<Response>;
+
+    const mockCreatedBoard = {
+      id: "new-board-123",
+      title: "My New Board",
+      userId: "test-user-id",
+      isDeleted: false,
+      columns: [],
+    };
+
+    vi.mocked(prisma.board.create).mockResolvedValue(mockCreatedBoard);
+
+    await boardController.createBoard(mockReq, mockRes as Response);
+
+    expect(prisma.board.create).toHaveBeenCalledWith({
+      data: {
+        title: "My New Board",
+        isDeleted: false,
+        userId: "test-user-id",
+      },
+      select: {
+        title: true,
+        columns: true,
+        id: true,
+      },
+    });
+
+    expect(mockRes.status).toHaveBeenCalledWith(201);
+    expect(mockRes.json).toHaveBeenCalledWith(mockCreatedBoard);
+  });
+
+  it("should return 500 when database creation fails", async () => {
+    const mockReq = {
+      user: { id: "test-user-id" },
+      params: {},
+      body: {
+        title: "My New Board",
+      },
+      query: {},
+    } as Partial<Request> as Request;
+
+    const mockRes = {
+      status: vi.fn().mockReturnThis(),
+      json: vi.fn().mockReturnThis(),
+    } as Partial<Response>;
+
+    const mockError = new Error("Database connection failed");
+    vi.mocked(prisma.board.create).mockRejectedValue(mockError);
+
+    await boardController.createBoard(mockReq, mockRes as Response);
+
+    expect(mockRes.status).toHaveBeenCalledWith(500);
+    expect(mockRes.json).toHaveBeenCalledWith({
+      message: "Failed to create new board",
+      error: "Database connection failed",
+    });
   });
 });
