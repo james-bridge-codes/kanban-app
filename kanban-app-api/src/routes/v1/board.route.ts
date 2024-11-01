@@ -15,7 +15,7 @@ router.post("/", boardController.createBoard);
 router.put("/:id", boardController.updateBoard);
 
 // DELETE BOARDS
-router.put("/soft-delete/:id", boardController.softDeteleBoard);
-router.delete("/hard-delete/:id", boardController.hardDeleteBoard);
+router.put("/:id/soft-delete", boardController.softDeteleBoard);
+router.delete("/:id", boardController.hardDeleteBoard);
 
 export default router;

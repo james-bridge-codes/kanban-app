@@ -145,7 +145,7 @@ const boardController: BoardController = {
       res.status(200).json(result);
     } catch (error) {
       res.status(500).json({
-        message: "Failed to create new board",
+        message: "Failed to update board",
         error: error instanceof Error ? error.message : "Unknown error",
       });
     }
@@ -156,7 +156,7 @@ const boardController: BoardController = {
       const user = req.user;
 
       if (!user) {
-        res.send(401).json({ message: "Authentication failed" });
+        res.status(401).json({ message: "Authentication failed" });
         return;
       }
 
@@ -176,7 +176,7 @@ const boardController: BoardController = {
       res.status(200).json({ message: "Board successfully soft-deleted" });
     } catch (error) {
       res.status(500).json({
-        message: "Failed to create new board",
+        message: "Failed to delete board",
         error: error instanceof Error ? error.message : "Unknown error",
       });
     }

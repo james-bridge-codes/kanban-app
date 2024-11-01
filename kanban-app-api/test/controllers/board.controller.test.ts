@@ -15,7 +15,7 @@ vi.mock("../../src/lib/prisma", () => ({
   },
 }));
 
-describe("Board Controller - getAllBoards", () => {
+describe("GET /boards", () => {
   it("should return a 401 if the user is not authenticated", async () => {
     const mockReq = {
       user: undefined,
@@ -167,7 +167,7 @@ describe("Board Controller - getAllBoards", () => {
   });
 });
 
-describe("Board Controller - getBoardByID", () => {
+describe("GET /boards:id", () => {
   it("should return a 401 if the user is not authenticated", async () => {
     const mockReq = {
       user: undefined,
@@ -283,7 +283,7 @@ describe("Board Controller - getBoardByID", () => {
   });
 });
 
-describe("Board Controller - create", () => {
+describe("POST /boards", () => {
   it("should return 401 if the user is not authenticated", async () => {
     const mockReq = {
       user: undefined,
@@ -402,7 +402,7 @@ describe("Board Controller - create", () => {
   });
 });
 
-describe("Board Controller - updated", () => {
+describe("PUT /boards:id", () => {
   it("shows a 401 error when user is not authenticated", async () => {
     const mockReq = {
       user: undefined,
@@ -507,8 +507,141 @@ describe("Board Controller - updated", () => {
 
     expect(mockRes.status).toHaveBeenCalledWith(500);
     expect(mockRes.json).toHaveBeenCalledWith({
-      message: "Failed to create new board",
+      message: "Failed to update board",
       error: "Database connection failed",
     });
   });
+});
+
+describe("PUT /boards:id/soft-delete", () => {
+  it("returns a 401 error if the user is not authenticated", async () => {
+    const mockReq = {
+      user: undefined,
+      params: {},
+      body: { title: "a new title" },
+      query: {},
+    } as Request;
+
+    const mockRes = {
+      status: vi.fn().mockReturnThis(),
+      json: vi.fn().mockReturnThis(),
+    } as Partial<Response>;
+
+    await boardController.softDeteleBoard(mockReq, mockRes as Response);
+
+    expect(mockRes.status).toHaveBeenCalledWith(401);
+    expect(mockRes.json).toHaveBeenCalledWith({
+      message: "Authentication failed",
+    });
+  });
+
+  it("returns a 500 error if the user tries to target a board they don't own", async () => {
+    const mockReq = {
+      user: { id: "test-user-id" },
+      params: { id: "001" },
+      query: {},
+    } as Partial<Request> as Request;
+
+    const mockRes = {
+      status: vi.fn().mockReturnThis(),
+      json: vi.fn().mockReturnThis(),
+    } as Partial<Response>;
+
+    vi.mocked(prisma.board.update).mockRejectedValue(
+      new Error("board not found")
+    );
+
+    await boardController.softDeteleBoard(mockReq, mockRes as Response);
+
+    // Verify update was called with correct where clause
+    expect(prisma.board.update).toHaveBeenCalledWith({
+      where: {
+        id: "001",
+        userId: "test-user-id",
+      },
+      data: {
+        isDeleted: true,
+      },
+    });
+
+    // Verify error response
+    expect(mockRes.status).toHaveBeenCalledWith(500);
+    expect(mockRes.json).toHaveBeenCalledWith({
+      message: "Failed to delete board",
+      error: "board not found",
+    });
+  });
+
+  it("allows an authenticated user to soft delete their own board", async () => {
+    const mockReq = {
+      user: { id: "test-user-id" },
+      params: { id: "001" },
+      query: {},
+    } as Partial<Request> as Request;
+
+    const mockRes = {
+      status: vi.fn().mockReturnThis(),
+      json: vi.fn().mockReturnThis(),
+    } as Partial<Response>;
+
+    vi.mocked(prisma.board.update).mockResolvedValue({
+      id: "001",
+      title: "some board",
+      isDeleted: true,
+      userId: "tesst-user-id",
+    });
+
+    await boardController.softDeteleBoard(mockReq, mockRes as Response);
+
+    expect(prisma.board.update).toHaveBeenCalledWith({
+      where: {
+        id: "001",
+        userId: "test-user-id",
+      },
+      data: {
+        isDeleted: true,
+      },
+    });
+
+    // Verify success response
+    expect(mockRes.status).toHaveBeenCalledWith(200);
+    expect(mockRes.json).toHaveBeenCalledWith({
+      message: "Board successfully soft-deleted",
+    });
+  });
+
+  it("should return 500 when database creation fails", async () => {
+    const mockReq = {
+      user: { id: "test-user-id" },
+      params: { id: "001" },
+      body: { title: "A new title" },
+      query: {},
+    } as Partial<Request> as Request;
+
+    const mockRes = {
+      status: vi.fn().mockReturnThis(),
+      json: vi.fn().mockReturnThis(),
+    } as Partial<Response>;
+
+    const mockError = new Error("Database connection failed");
+    vi.mocked(prisma.board.update).mockRejectedValue(mockError);
+
+    await boardController.softDeteleBoard(mockReq, mockRes as Response);
+
+    expect(mockRes.status).toHaveBeenCalledWith(500);
+    expect(mockRes.json).toHaveBeenCalledWith({
+      message: "Failed to delete board",
+      error: "Database connection failed",
+    });
+  });
+});
+
+describe("DELETE /boards:id", () => {
+  it("returns a 401 error if the user is not authenticated", async () => {});
+
+  it("returns a 500 error if the user tries to target a board they don't own", async () => {});
+
+  it("deletes the board from the database", async () => {});
+
+  it("returns a 500 error if the prisma call fails", async () => {});
 });
