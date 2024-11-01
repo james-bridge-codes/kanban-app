@@ -16,7 +16,7 @@ const boardController: BoardController = {
       const user = req.user;
 
       if (!user) {
-        res.send(401).json({ message: "Authentication failed" });
+        res.status(401).json({ message: "Authentication failed" });
         return;
       }
 
@@ -48,7 +48,7 @@ const boardController: BoardController = {
       const user = req.user;
 
       if (!user) {
-        res.send(401).json({ message: "Authentication failed" });
+        res.status(401).json({ message: "Authentication failed" });
         return;
       }
 
