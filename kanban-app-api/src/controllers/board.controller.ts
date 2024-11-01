@@ -87,7 +87,6 @@ const boardController: BoardController = {
       const { title } = req.body;
 
       if (title === undefined || title.length < 1) {
-        console.log("Short title");
         res.status(400).json({ message: "No title provided" });
         return;
       }
@@ -187,7 +186,7 @@ const boardController: BoardController = {
       const user = req.user;
 
       if (!user) {
-        res.send(401).json({ message: "Authentication failed" });
+        res.status(401).json({ message: "Authentication failed" });
         return;
       }
 
@@ -204,7 +203,7 @@ const boardController: BoardController = {
       res.status(204).json({ message: "Board successfully deleted" });
     } catch (error) {
       res.status(500).json({
-        message: "Failed to create new board",
+        message: "Failed to delete board",
         error: error instanceof Error ? error.message : "Unknown error",
       });
     }

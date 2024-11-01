@@ -11,6 +11,7 @@ vi.mock("../../src/lib/prisma", () => ({
       findUnique: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
+      delete: vi.fn(),
     },
   },
 }));
@@ -637,11 +638,119 @@ describe("PUT /boards:id/soft-delete", () => {
 });
 
 describe("DELETE /boards:id", () => {
-  it("returns a 401 error if the user is not authenticated", async () => {});
+  it("returns a 401 error if the user is not authenticated", async () => {
+    const mockReq = {
+      user: undefined,
+      params: {},
+      body: { title: "a new title" },
+      query: {},
+    } as Request;
 
-  it("returns a 500 error if the user tries to target a board they don't own", async () => {});
+    const mockRes = {
+      status: vi.fn().mockReturnThis(),
+      json: vi.fn().mockReturnThis(),
+    } as Partial<Response>;
 
-  it("deletes the board from the database", async () => {});
+    await boardController.hardDeleteBoard(mockReq, mockRes as Response);
 
-  it("returns a 500 error if the prisma call fails", async () => {});
+    expect(mockRes.status).toHaveBeenCalledWith(401);
+    expect(mockRes.json).toHaveBeenCalledWith({
+      message: "Authentication failed",
+    });
+  });
+
+  it("returns a 500 error if the user tries to target a board they don't own", async () => {
+    const mockReq = {
+      user: { id: "test-user-id" },
+      params: { id: "001" },
+      query: {},
+    } as Partial<Request> as Request;
+
+    const mockRes = {
+      status: vi.fn().mockReturnThis(),
+      json: vi.fn().mockReturnThis(),
+    } as Partial<Response>;
+
+    vi.mocked(prisma.board.delete).mockRejectedValue(
+      new Error("board not found")
+    );
+
+    await boardController.hardDeleteBoard(mockReq, mockRes as Response);
+
+    // Verify update was called with correct where clause
+    expect(prisma.board.delete).toHaveBeenCalledWith({
+      where: {
+        id: "001",
+        userId: "test-user-id",
+      },
+    });
+
+    // Verify error response
+    expect(mockRes.status).toHaveBeenCalledWith(500);
+    expect(mockRes.json).toHaveBeenCalledWith({
+      message: "Failed to delete board",
+      error: "board not found",
+    });
+  });
+
+  it("deletes the board from the database", async () => {
+    const mockReq = {
+      user: { id: "test-user-id" },
+      params: { id: "001" },
+      query: {},
+    } as Partial<Request> as Request;
+
+    const mockRes = {
+      status: vi.fn().mockReturnThis(),
+      json: vi.fn().mockReturnThis(),
+    } as Partial<Response>;
+
+    vi.mocked(prisma.board.delete).mockResolvedValue({
+      id: "001",
+      title: "some board",
+      isDeleted: false,
+      userId: "test-user-id",
+    });
+
+    await boardController.hardDeleteBoard(mockReq, mockRes as Response);
+
+    // Verify update was called with correct where clause
+    expect(prisma.board.delete).toHaveBeenCalledWith({
+      where: {
+        id: "001",
+        userId: "test-user-id",
+      },
+    });
+
+    // Verify error response
+    expect(mockRes.status).toHaveBeenCalledWith(204);
+    expect(mockRes.json).toHaveBeenCalledWith({
+      message: "Board successfully deleted",
+    });
+  });
+
+  it("returns a 500 error if the prisma call fails", async () => {
+    const mockReq = {
+      user: { id: "test-user-id" },
+      params: { id: "001" },
+      body: { title: "A new title" },
+      query: {},
+    } as Partial<Request> as Request;
+
+    const mockRes = {
+      status: vi.fn().mockReturnThis(),
+      json: vi.fn().mockReturnThis(),
+    } as Partial<Response>;
+
+    const mockError = new Error("Database connection failed");
+    vi.mocked(prisma.board.delete).mockRejectedValue(mockError);
+
+    await boardController.hardDeleteBoard(mockReq, mockRes as Response);
+
+    expect(mockRes.status).toHaveBeenCalledWith(500);
+    expect(mockRes.json).toHaveBeenCalledWith({
+      message: "Failed to delete board",
+      error: "Database connection failed",
+    });
+  });
 });
