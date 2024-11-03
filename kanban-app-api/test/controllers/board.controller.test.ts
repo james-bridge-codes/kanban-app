@@ -143,8 +143,6 @@ describe("GET /boards", () => {
       error: "Unknown error",
     });
   });
-
-  it("should not return a board marked as deleted", () => {});
 });
 
 describe("GET /boards:id", () => {
