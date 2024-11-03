@@ -3,6 +3,10 @@ import type { Request, Response } from "express";
 import authController from "../../src/controllers/auth.controller";
 import { prisma } from "../../src/lib/prisma";
 import { UserPayload, UserResponse } from "../../src/types/auth.types";
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+import { createToken } from "../../src/services/authService";
+import { create } from "domain";
 
 vi.mock("../../src/lib/prisma", () => ({
   prisma: {
@@ -10,6 +14,16 @@ vi.mock("../../src/lib/prisma", () => ({
       findUnique: vi.fn(),
     },
   },
+}));
+
+vi.mock("bcrypt", () => ({
+  default: {
+    compare: vi.fn(),
+  },
+}));
+
+vi.mock("../../src/services/authService", () => ({
+  createToken: vi.fn().mockImplementation(() => "mock.jwt.token"),
 }));
 
 let authenticatedUserId: string;
@@ -25,7 +39,7 @@ beforeEach(() => {
   mockReq = {
     user: { id: authenticatedUserId },
     params: {},
-    body: {},
+    body: { email: "user@email.com", password: "123ABC" },
     query: {},
   } as Request;
 
@@ -87,7 +101,66 @@ describe("GET /auth", () => {
 });
 
 describe("POST /auth/login", () => {
-  it("is a placeholder", () => {});
+  it("should return a 401 if no user exists", async () => {
+    mockReq.user = undefined;
+
+    vi.mocked(prisma.user.findUnique).mockResolvedValue(null);
+
+    await authController.login(mockReq, mockRes as Response);
+
+    expect(mockRes.status).toHaveBeenCalledWith(401);
+    expect(mockRes.json).toHaveBeenCalledWith({
+      message: "Invalid credentials",
+    });
+  });
+
+  it("should return a 401 if password is not valid", async () => {
+    vi.mocked(prisma.user.findUnique).mockResolvedValue({
+      email: "",
+      password: "",
+      name: "",
+      id: "",
+    });
+
+    vi.mocked(bcrypt.compare).mockImplementationOnce(() =>
+      Promise.resolve(false)
+    );
+
+    await authController.login(mockReq, mockRes as Response);
+
+    expect(mockRes.status).toHaveBeenCalledWith(401);
+    expect(mockRes.json).toHaveBeenCalledWith({
+      message: "Invalid credentials",
+    });
+  });
+
+  it("should return a valid jwt token including user data", async () => {
+    const mockUser = {
+      id: authenticatedUserId,
+      email: "test@example.com",
+      password: "hashedPassword",
+      name: "Test User",
+    };
+
+    vi.mocked(prisma.user.findUnique).mockResolvedValue(mockUser);
+
+    vi.mocked(bcrypt.compare).mockImplementationOnce(() =>
+      Promise.resolve(true)
+    );
+
+    await authController.login(mockReq, mockRes as Response);
+
+    expect(bcrypt.compare).toHaveBeenCalledWith("123ABC", mockUser.password);
+    expect(createToken).toHaveBeenCalledWith(mockUser.id);
+    expect(mockRes.json).toHaveBeenCalledWith({
+      user: {
+        id: mockUser.id,
+        email: mockUser.email,
+        name: mockUser.name,
+      },
+      token: "mock.jwt.token",
+    });
+  });
 });
 
 describe("POST /auth/register", () => {

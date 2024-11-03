@@ -1,8 +1,9 @@
 import { Request, Response, RequestHandler, NextFunction } from "express";
-import jwt from "jsonwebtoken";
 import { prisma } from "../lib/prisma";
 import { LoginDTO } from "../types/auth.types";
 import bcrypt from "bcrypt";
+import { createToken } from "../services/authService";
+import { create } from "domain";
 
 interface AuthController {
   register: (req: Request, res: Response) => Promise<void>;
@@ -40,7 +41,7 @@ const authController: AuthController = {
         },
       });
 
-      const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET!);
+      const token = createToken(user.id);
 
       res.status(201).json({ user, token });
     } catch (error) {
@@ -72,7 +73,7 @@ const authController: AuthController = {
         return;
       }
 
-      const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET!);
+      const token = createToken(user.id);
 
       res.json({
         user: {
