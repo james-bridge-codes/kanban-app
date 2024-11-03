@@ -12,6 +12,11 @@ vi.mock("../../src/lib/prisma", () => ({
   prisma: {
     user: {
       findUnique: vi.fn(),
+      create: vi.fn().mockImplementation(() => ({
+        id: "new-user-id",
+        email: "user@email.com",
+        name: "user name",
+      })),
     },
   },
 }));
@@ -19,6 +24,7 @@ vi.mock("../../src/lib/prisma", () => ({
 vi.mock("bcrypt", () => ({
   default: {
     compare: vi.fn(),
+    hash: vi.fn(),
   },
 }));
 
@@ -30,6 +36,7 @@ let authenticatedUserId: string;
 let mockReq: Request;
 let mockRes: Partial<Response>;
 let mockUser: UserResponse;
+let mockNewUser: { name: string; email: string; password: string };
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -52,6 +59,12 @@ beforeEach(() => {
     id: authenticatedUserId,
     email: "user@email.com",
     name: "user name",
+  };
+
+  mockNewUser = {
+    name: "new user",
+    email: "user@email.com",
+    password: "123ABC",
   };
 });
 
@@ -161,8 +174,100 @@ describe("POST /auth/login", () => {
       token: "mock.jwt.token",
     });
   });
+
+  it("handles non-Error objects in error response", async () => {
+    vi.mocked(prisma.user.findUnique).mockRejectedValue("string error");
+
+    await authController.login(mockReq, mockRes as Response);
+
+    expect(mockRes.status).toHaveBeenCalledWith(500);
+    expect(mockRes.json).toHaveBeenCalledWith({
+      message: "Error logging in",
+      error: "Unknown error",
+    });
+  });
+
+  it("handles Error objects in error response", async () => {
+    const errorMessage = "Database connection failed";
+    vi.mocked(prisma.user.findUnique).mockRejectedValue(
+      new Error(errorMessage)
+    );
+
+    await authController.login(mockReq, mockRes as Response);
+
+    expect(mockRes.status).toHaveBeenCalledWith(500);
+    expect(mockRes.json).toHaveBeenCalledWith({
+      message: "Error logging in",
+      error: errorMessage,
+    });
+  });
 });
 
 describe("POST /auth/register", () => {
-  it("is a placeholder", () => {});
+  beforeEach(() => {
+    mockReq.body = {
+      email: "user@email.com",
+      password: "123ABC",
+      name: "new user",
+    };
+  });
+
+  it("should successfully register a new user", async () => {
+    vi.mocked(prisma.user.findUnique).mockResolvedValueOnce(null);
+
+    vi.mocked(bcrypt.hash).mockImplementationOnce(() =>
+      Promise.resolve("hashedPassword123")
+    );
+
+    vi.mocked(prisma.user.create).mockResolvedValueOnce({
+      name: mockReq.body.name,
+      id: "001",
+      email: mockReq.body.email,
+    } as any);
+
+    await authController.register(mockReq, mockRes as Response);
+
+    expect(mockRes.status).toHaveBeenCalledWith(201);
+    expect(mockRes.json).toHaveBeenCalledWith({
+      user: { name: "new user", id: "001", email: "user@email.com" },
+      token: "mock.jwt.token",
+    });
+  });
+
+  it("should return a 400 error if the email is already in use", async () => {
+    vi.mocked(prisma.user.findUnique).mockResolvedValue(mockUser as any);
+
+    await authController.register(mockReq, mockRes as Response);
+
+    expect(mockRes.status).toHaveBeenCalledWith(400);
+    expect(mockRes.json).toHaveBeenCalledWith({
+      message: "Email already registered",
+    });
+  });
+
+  it("should return a 500 error if it the prisma call fails", async () => {
+    const mockError = new Error("Error registering user");
+
+    vi.mocked(prisma.user.findUnique).mockRejectedValue(mockError);
+
+    await authController.register(mockReq, mockRes as Response);
+
+    expect(mockRes.status).toHaveBeenCalledWith(500);
+    expect(mockRes.json).toHaveBeenCalledWith({
+      message: "Error registering user",
+      error: "Error registering user",
+    });
+  });
+
+  it("handles non-Error objects in error response", async () => {
+    vi.mocked(prisma.user.findUnique).mockRejectedValue("string error");
+
+    await authController.register(mockReq, mockRes as Response);
+
+    expect(mockRes.status).toHaveBeenCalledWith(500);
+    expect(mockRes.json).toHaveBeenCalledWith({
+      message: "Error registering user",
+      error: "Unknown error",
+    });
+  });
 });
