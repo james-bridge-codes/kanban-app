@@ -3,7 +3,6 @@ import { prisma } from "../lib/prisma";
 import { LoginDTO } from "../types/auth.types";
 import bcrypt from "bcrypt";
 import { createToken } from "../services/authService";
-import { create } from "domain";
 
 interface AuthController {
   register: (req: Request, res: Response) => Promise<void>;
