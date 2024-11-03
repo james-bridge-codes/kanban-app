@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { prisma } from "../lib/prisma";
 
 interface ColumnController {
   getAllColumns: (req: Request, res: Response) => Promise<void>;
@@ -11,7 +12,33 @@ interface ColumnController {
 
 const columnController: ColumnController = {
   getAllColumns: async (req: Request, res: Response): Promise<void> => {
-    res.status(200).send("Get all the columns");
+    try {
+      const user = req.user;
+
+      if (!user) {
+        res.status(401).json({ message: "User not authenticated" });
+      }
+
+      const { boardId } = req.body;
+
+      if (!boardId) {
+        res.status(400).json({ message: "Board ID missing" });
+      }
+
+      const result = await prisma.column.findMany({
+        where: {
+          boardId: boardId,
+          isDeleted: false,
+        },
+      });
+
+      res.status(200).json(result);
+    } catch (error) {
+      res.status(500).json({
+        message: "Error in column controller",
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
   },
 
   getColumnByID: async (req: Request, res: Response): Promise<void> => {

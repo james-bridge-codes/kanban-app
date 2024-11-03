@@ -25,8 +25,8 @@ model Board {
   title     String
   isDeleted Boolean
   columns   Column[]
-  User      User?    @relation(fields: [userId], references: [id])
-  userId    String?
+  User      User     @relation(fields: [userId], references: [id])
+  userId    String
 }
 
 // Columns
@@ -36,8 +36,8 @@ model Column {
   isDeleted Boolean
   tickets   Ticket[]
   index     Int
-  Board     Board?   @relation(fields: [boardId], references: [id])
-  boardId   String?
+  Board     Board    @relation(fields: [boardId], references: [id])
+  boardId   String
 }
 
 // TICKETS
@@ -47,8 +47,8 @@ model Ticket {
   description String
   isDeleted   Boolean
   tasks       Task[]
-  Column      Column? @relation(fields: [columnId], references: [id])
-  columnId    String?
+  Column      Column  @relation(fields: [columnId], references: [id])
+  columnId    String
 }
 
 // TASKS
@@ -57,6 +57,6 @@ model Task {
   title     String
   completed Boolean
   isDeleted Boolean
-  Ticket    Ticket? @relation(fields: [ticketId], references: [id])
-  ticketId  String?
+  Ticket    Ticket  @relation(fields: [ticketId], references: [id])
+  ticketId  String
 }
