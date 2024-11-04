@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { prisma } from "../lib/prisma";
 
 interface TicketController {
   getAllTickets: (req: Request, res: Response) => Promise<void>;
@@ -11,7 +12,33 @@ interface TicketController {
 
 const ticketController: TicketController = {
   getAllTickets: async (req: Request, res: Response): Promise<void> => {
-    res.status(200).send("Get all the tickets");
+    try {
+      const user = req.user;
+
+      if (!user) {
+        res.status(401).json({ message: "User not authenticated" });
+      }
+
+      const { columnId } = req.body;
+
+      if (!columnId) {
+        res.status(400).json({ message: "Column ID missing" });
+      }
+
+      const result = await prisma.ticket.findMany({
+        where: {
+          columnId: columnId,
+          isDeleted: false,
+        },
+      });
+
+      res.status(200).json(result);
+    } catch (error) {
+      res.status(500).json({
+        message: "Error in ticket controller",
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
   },
 
   getTicketByID: async (req: Request, res: Response): Promise<void> => {
