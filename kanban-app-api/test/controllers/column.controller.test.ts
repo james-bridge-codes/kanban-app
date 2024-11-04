@@ -231,7 +231,64 @@ describe("GET /column:id", () => {
 });
 
 describe("POST /column", () => {
-  it("is a placeholder", () => {});
+  it("should give a 401 error if the user is not authenticated", async () => {
+    mockReq.user = undefined;
+
+    await columnController.createColumn(mockReq, mockRes as Response);
+
+    expect(mockRes.status).toHaveBeenCalledWith(401);
+    expect(mockRes.json).toHaveBeenCalledWith({
+      message: "User not authenticated",
+    });
+  });
+
+  it("should give a 400 error if the board id is missing", async () => {
+    mockReq.body.boardId = undefined;
+
+    await columnController.createColumn(mockReq, mockRes as Response);
+
+    expect(mockRes.status).toHaveBeenCalledWith(400);
+    expect(mockRes.json).toHaveBeenCalledWith({
+      message: "Board id missing",
+    });
+  });
+
+  it("should give a 400 error if the column name is missing", async () => {
+    mockReq.body.boardId = "001";
+    mockReq.body.columnName = undefined;
+
+    await columnController.createColumn(mockReq, mockRes as Response);
+
+    expect(mockRes.status).toHaveBeenCalledWith(400);
+    expect(mockRes.json).toHaveBeenCalledWith({
+      message: "column name missing",
+    });
+  });
+
+  it("should call prisma with the correct query", async () => {
+    mockReq.body.boardId = "001";
+    mockReq.body.columnName = "new col";
+
+    vi.mocked(prisma.column.create).mockResolvedValue(testColumns[0]);
+
+    await columnController.createColumn(mockReq, mockRes as Response);
+
+    expect(mockRes.status).toHaveBeenCalledWith(200);
+    expect(mockRes.json).toHaveBeenCalledWith(testColumns[0]);
+  });
+
+  it("handles non-Error objects in error response", async () => {
+    mockReq.user = { id: authenticatedUserId };
+    vi.mocked(prisma.column.create).mockRejectedValue("string error");
+
+    await columnController.getAllColumns(mockReq, mockRes as Response);
+
+    expect(mockRes.status).toHaveBeenCalledWith(500);
+    expect(mockRes.json).toHaveBeenCalledWith({
+      message: "Error in column controller",
+      error: "Unknown error",
+    });
+  });
 });
 
 describe("PUT /column:id", () => {

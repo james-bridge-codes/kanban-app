@@ -78,7 +78,47 @@ const columnController: ColumnController = {
   },
 
   createColumn: async (req: Request, res: Response): Promise<void> => {
-    res.status(200).send("Creating a new column");
+    try {
+      const user = req.user;
+
+      if (!user) {
+        res.status(401).json({ message: "User not authenticated" });
+      }
+
+      const { boardId } = req.body;
+
+      if (!boardId) {
+        res.status(400).json({ message: "Board id missing" });
+      }
+
+      const { columnName } = req.body;
+
+      if (!columnName) {
+        res.status(400).json({ message: "column name missing" });
+      }
+
+      const result = await prisma.column.create({
+        data: {
+          title: columnName,
+          index: 0,
+          isDeleted: false,
+          boardId: boardId,
+        },
+        select: {
+          title: true,
+          index: true,
+          tickets: true,
+          boardId: true,
+        },
+      });
+
+      res.status(200).json(result);
+    } catch (error) {
+      res.status(500).json({
+        message: "Error in column controller",
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
   },
 
   updateColumn: async (req: Request, res: Response): Promise<void> => {
