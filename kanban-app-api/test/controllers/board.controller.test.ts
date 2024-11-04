@@ -1,8 +1,8 @@
 import { describe, expect, it, beforeEach, vi } from "vitest";
 import type { Request, Response } from "express";
-import boardController from "../../src/controllers/board.controller";
 import { prisma } from "../../src/lib/prisma";
 import { UserPayload } from "../../src/types/auth.types";
+import boardController from "../../src/controllers/board.controller";
 
 vi.mock("../../src/lib/prisma", () => ({
   prisma: {
@@ -69,7 +69,7 @@ beforeEach(() => {
   } as Partial<Response>;
 });
 
-describe("GET /boards", () => {
+describe("GET /board", () => {
   it("should return a 401 if the user is not authenticated", async () => {
     mockReq.user = undefined;
 
@@ -145,7 +145,7 @@ describe("GET /boards", () => {
   });
 });
 
-describe("GET /boards:id", () => {
+describe("GET /board:id", () => {
   it("should return a 401 if the user is not authenticated", async () => {
     mockReq.user = undefined;
 
@@ -242,7 +242,7 @@ describe("GET /boards:id", () => {
   });
 });
 
-describe("POST /boards", () => {
+describe("POST /board", () => {
   it("should return 401 if the user is not authenticated", async () => {
     mockReq.user = undefined;
     mockReq.body = { title: "New Board" };
@@ -323,7 +323,7 @@ describe("POST /boards", () => {
   });
 });
 
-describe("PUT /boards:id", () => {
+describe("PUT /board:id", () => {
   it("shows a 401 error when user is not authenticated", async () => {
     mockReq.user = undefined;
     mockReq.body = { title: "New Title" };
@@ -408,7 +408,7 @@ describe("PUT /boards:id", () => {
   });
 });
 
-describe("PUT /boards:id/soft-delete", () => {
+describe("PUT /board:id/soft-delete", () => {
   it("returns a 401 error if the user is not authenticated", async () => {
     mockReq.user = undefined;
     mockReq.params = { id: "001" };
@@ -507,7 +507,7 @@ describe("PUT /boards:id/soft-delete", () => {
   });
 });
 
-describe("DELETE /boards:id", () => {
+describe("DELETE /board:id", () => {
   it("returns a 401 error if the user is not authenticated", async () => {
     mockReq.user = undefined;
     mockReq.params = { id: "001" };
