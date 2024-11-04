@@ -308,6 +308,18 @@ describe("PUT /column:id", () => {
     });
   });
 
+  it("should give a 400 error if the title is missing", async () => {
+    mockReq.params.id = "001";
+    mockReq.body.title = undefined;
+
+    await columnController.updateColumn(mockReq, mockRes as Response);
+
+    expect(mockRes.status).toHaveBeenCalledWith(400);
+    expect(mockRes.json).toHaveBeenCalledWith({
+      message: "New title missing",
+    });
+  });
+
   it("should call Prisma with the correct query ", async () => {
     vi.mocked(prisma.column.update).mockResolvedValue({
       title: "old title",

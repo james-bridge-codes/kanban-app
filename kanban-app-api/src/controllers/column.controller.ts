@@ -100,13 +100,11 @@ const columnController: ColumnController = {
       const result = await prisma.column.create({
         data: {
           title: columnName,
-          index: 0,
           isDeleted: false,
           boardId: boardId,
         },
         select: {
           title: true,
-          index: true,
           tickets: true,
           boardId: true,
         },
