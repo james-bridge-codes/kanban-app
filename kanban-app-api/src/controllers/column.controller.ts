@@ -135,8 +135,6 @@ const columnController: ColumnController = {
 
       const { title: newTitle } = req.body;
 
-      console.log("The title is ", newTitle);
-
       if (!newTitle) {
         res.status(400).json({ message: "New title missing" });
       }
@@ -165,11 +163,64 @@ const columnController: ColumnController = {
   },
 
   softDeleteColumn: async (req: Request, res: Response): Promise<void> => {
-    res.status(200).send("Soft deleting a column");
+    try {
+      const user = req.user;
+
+      if (!user) {
+        res.status(401).json({ message: "User not authenticated" });
+      }
+
+      const { id: columnId } = req.params;
+
+      if (!columnId) {
+        res.status(400).json({ message: "Column ID missing" });
+      }
+
+      await prisma.column.update({
+        where: {
+          id: columnId,
+        },
+        data: {
+          isDeleted: true,
+        },
+      });
+
+      res.status(204).json({ message: "column has been deleted" });
+    } catch (error) {
+      res.status(500).json({
+        message: "Error in column controller",
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
   },
 
   hardDeleteColumn: async (req: Request, res: Response): Promise<void> => {
-    res.status(200).send("Hard deleting a column");
+    try {
+      const user = req.user;
+
+      if (!user) {
+        res.status(401).json({ message: "User not authenticated" });
+      }
+
+      const { id: columnId } = req.params;
+
+      if (!columnId) {
+        res.status(400).json({ message: "Column ID missing" });
+      }
+
+      await prisma.column.delete({
+        where: {
+          id: columnId,
+        },
+      });
+
+      res.status(204).json({ message: "column has been deleted" });
+    } catch (error) {
+      res.status(500).json({
+        message: "Error in column controller",
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
   },
 };
 
