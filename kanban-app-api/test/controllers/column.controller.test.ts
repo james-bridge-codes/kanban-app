@@ -35,7 +35,6 @@ const testColumns = [
     isDeleted: false,
     tickets: [],
     boardId: "testBoard",
-    index: 1,
   },
   {
     id: "002",
@@ -43,7 +42,6 @@ const testColumns = [
     isDeleted: false,
     tickets: [],
     boardId: "testBoard",
-    index: 2,
   },
   {
     id: "003",
@@ -51,7 +49,6 @@ const testColumns = [
     isDeleted: true,
     tickets: [],
     boardId: "testBoard",
-    index: 3,
   },
   {
     id: "004",
@@ -59,7 +56,6 @@ const testColumns = [
     isDeleted: false,
     tickets: [],
     boardId: "otherBoard",
-    index: 4,
   },
 ];
 
@@ -292,7 +288,66 @@ describe("POST /column", () => {
 });
 
 describe("PUT /column:id", () => {
-  it("is a placeholder", () => {});
+  it("should give a 401 error if the user is not authenticated", async () => {
+    mockReq.user = undefined;
+
+    await columnController.updateColumn(mockReq, mockRes as Response);
+
+    expect(mockRes.status).toHaveBeenCalledWith(401);
+    expect(mockRes.json).toHaveBeenCalledWith({
+      message: "User not authenticated",
+    });
+  });
+
+  it("should give a 400 error if the column id is missing", async () => {
+    await columnController.updateColumn(mockReq, mockRes as Response);
+
+    expect(mockRes.status).toHaveBeenCalledWith(400);
+    expect(mockRes.json).toHaveBeenCalledWith({
+      message: "Column ID missing",
+    });
+  });
+
+  it("should call Prisma with the correct query ", async () => {
+    vi.mocked(prisma.column.update).mockResolvedValue({
+      title: "old title",
+      id: "001",
+      isDeleted: false,
+      boardId: "some board",
+    });
+
+    mockReq.body.title = "new title";
+    mockReq.params.id = "001";
+
+    await columnController.updateColumn(mockReq, mockRes as Response);
+
+    expect(prisma.column.update).toHaveBeenCalledWith({
+      where: {
+        id: "001",
+      },
+      data: {
+        title: "new title",
+      },
+      select: {
+        title: true,
+        tickets: true,
+        id: true,
+      },
+    });
+  });
+
+  it("handles non-Error objects in error response", async () => {
+    mockReq.user = { id: authenticatedUserId };
+    vi.mocked(prisma.column.update).mockRejectedValue("string error");
+
+    await columnController.getAllColumns(mockReq, mockRes as Response);
+
+    expect(mockRes.status).toHaveBeenCalledWith(500);
+    expect(mockRes.json).toHaveBeenCalledWith({
+      message: "Error in column controller",
+      error: "Unknown error",
+    });
+  });
 });
 
 describe("PUT /column:id/soft-delete", () => {

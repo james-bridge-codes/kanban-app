@@ -35,7 +35,6 @@ model Column {
   title     String
   isDeleted Boolean
   tickets   Ticket[]
-  index     Int
   Board     Board    @relation(fields: [boardId], references: [id])
   boardId   String
 }

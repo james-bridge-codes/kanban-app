@@ -122,7 +122,48 @@ const columnController: ColumnController = {
   },
 
   updateColumn: async (req: Request, res: Response): Promise<void> => {
-    res.status(200).send("Updating a column");
+    try {
+      const user = req.user;
+
+      if (!user) {
+        res.status(401).json({ message: "User not authenticated" });
+      }
+
+      const { id: columnId } = req.params;
+
+      if (!columnId) {
+        res.status(400).json({ message: "Column ID missing" });
+      }
+
+      const { title: newTitle } = req.body;
+
+      console.log("The title is ", newTitle);
+
+      if (!newTitle) {
+        res.status(400).json({ message: "New title missing" });
+      }
+
+      const result = await prisma.column.update({
+        where: {
+          id: columnId,
+        },
+        data: {
+          title: newTitle,
+        },
+        select: {
+          title: true,
+          tickets: true,
+          id: true,
+        },
+      });
+
+      res.status(200).json(result);
+    } catch (error) {
+      res.status(500).json({
+        message: "Error in column controller",
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
   },
 
   softDeleteColumn: async (req: Request, res: Response): Promise<void> => {
