@@ -42,7 +42,39 @@ const columnController: ColumnController = {
   },
 
   getColumnByID: async (req: Request, res: Response): Promise<void> => {
-    res.status(200).send("Get a column by id");
+    try {
+      const user = req.user;
+
+      if (!user) {
+        res.status(401).json({ message: "User not authenticated" });
+      }
+
+      const { boardId } = req.body;
+
+      if (!boardId) {
+        res.status(400).json({ message: "Board ID missing" });
+      }
+
+      const { id: columnId } = req.params;
+
+      if (!columnId) {
+        res.status(400).json({ message: "Column ID missing" });
+      }
+
+      const result = await prisma.column.findUnique({
+        where: {
+          id: columnId,
+          isDeleted: false,
+        },
+      });
+
+      res.status(200).json(result);
+    } catch (error) {
+      res.status(500).json({
+        message: "Error in column controller",
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
   },
 
   createColumn: async (req: Request, res: Response): Promise<void> => {

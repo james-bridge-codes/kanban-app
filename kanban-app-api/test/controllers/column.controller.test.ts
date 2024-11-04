@@ -152,7 +152,82 @@ describe("GET /column", () => {
 });
 
 describe("GET /column:id", () => {
-  it("is a placeholder", () => {});
+  it("should give a 401 error if the user is not authenticated", async () => {
+    mockReq.user = undefined;
+
+    await columnController.getColumnByID(mockReq, mockRes as Response);
+
+    expect(mockRes.status).toHaveBeenCalledWith(401);
+    expect(mockRes.json).toHaveBeenCalledWith({
+      message: "User not authenticated",
+    });
+  });
+
+  it("should give a 400 error if the board id is missing", async () => {
+    mockReq.body.boardId = undefined;
+
+    await columnController.getColumnByID(mockReq, mockRes as Response);
+
+    expect(mockRes.status).toHaveBeenCalledWith(400);
+    expect(mockRes.json).toHaveBeenCalledWith({
+      message: "Board ID missing",
+    });
+  });
+
+  it("should give a 400 error if the column id is missing", async () => {
+    mockReq.body.boardId = undefined;
+
+    await columnController.getColumnByID(mockReq, mockRes as Response);
+
+    expect(mockRes.status).toHaveBeenCalledWith(400);
+    expect(mockRes.json).toHaveBeenCalledWith({
+      message: "Column ID missing",
+    });
+  });
+
+  it("should call prisma with the correct query", async () => {
+    mockReq.params.id = "001";
+
+    vi.mocked(prisma.column.findUnique).mockResolvedValue(testColumns[0]);
+
+    await columnController.getColumnByID(mockReq, mockRes as Response);
+
+    expect(prisma.column.findUnique).toHaveBeenCalledWith({
+      where: {
+        id: "001",
+        isDeleted: false,
+      },
+    });
+
+    expect(mockRes.status).toHaveBeenCalledWith(200);
+    expect(mockRes.json).toHaveBeenCalledWith(testColumns[0]);
+  });
+
+  it("should return 500 when database query fails", async () => {
+    const mockError = new Error("Database connection failed");
+    vi.mocked(prisma.column.findUnique).mockRejectedValue(mockError);
+
+    await columnController.getAllColumns(mockReq, mockRes as Response);
+
+    expect(mockRes.status).toHaveBeenCalledWith(500);
+    expect(mockRes.json).toHaveBeenCalledWith({
+      message: "Error in column controller",
+      error: "Unknown error",
+    });
+  });
+
+  it("handles non-Error objects in error response", async () => {
+    mockReq.user = { id: authenticatedUserId };
+    vi.mocked(prisma.column.findUnique).mockRejectedValue("string error");
+
+    await columnController.getAllColumns(mockReq, mockRes as Response);
+
+    expect(mockRes.status).toHaveBeenCalledWith(500);
+    expect(mockRes.json).toHaveBeenCalledWith({
+      message: "Error in column controller",
+      error: "Unknown error",
+    });
+  });
 });
 
 describe("POST /column", () => {
