@@ -1,0 +1,32 @@
+* {
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+button {
+  cursor: pointer;
+}
+
+:root {
+  /* Core Colors */
+  --black: rgba(0, 1, 18, 1); /* #000112 */
+  --very-dark-grey: rgba(32, 33, 44, 1); /* #20212C - Dark BG */
+  --dark-grey: rgba(43, 44, 55, 1); /* #2B2C37 */
+  --lines-dark: rgba(62, 63, 78, 1); /* #3E3F4E */
+  --medium-grey: rgba(130, 143, 163, 1); /* #828FA3 */
+  --lines-light: rgba(228, 235, 250, 1); /* #E4EBFA */
+  --light-grey: rgba(244, 247, 253, 1); /* #F4F7FD - Light BG */
+  --white: rgba(255, 255, 255, 1); /* #FFFFFF */
+
+  /* Brand Colors */
+  --main-purple: rgba(99, 95, 199, 1); /* #635FC7 */
+  --main-purple-hover: rgba(168, 164, 255, 1); /* #A8A4FF */
+
+  /* Status Colors */
+  --red: rgba(234, 85, 85, 1); /* #EA5555 */
+  --red-hover: rgba(255, 152, 152, 1); /* #FF9898 */
+
+  /* Font Sizes */
+  --heading-l: 18px;
+}
