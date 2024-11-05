@@ -41,7 +41,32 @@ const taskController: TaskController = {
   },
 
   getTaskByID: async (req: Request, res: Response): Promise<void> => {
-    res.status(200).send("Get a task by id");
+    try {
+      const user = req.user;
+
+      if (!user) {
+        res.status(401).json({ message: "User not authenticated" });
+      }
+
+      const { id: taskId } = req.params;
+
+      if (!taskId) {
+        res.status(400).json({ message: "No task id provided" });
+      }
+
+      const result = await prisma.task.findUnique({
+        where: {
+          id: taskId,
+        },
+      });
+
+      res.status(200).json(result);
+    } catch (error) {
+      res.status(500).json({
+        message: "Error in ticket controller",
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
   },
 
   createTask: async (req: Request, res: Response): Promise<void> => {

@@ -126,7 +126,64 @@ describe("GET /task", () => {
     });
   });
 });
-// describe("GET /task:id", () => {});
+describe("GET /task:id", () => {
+  it("should return a 401 error if the user is not authenticated", async () => {
+    mockReq.user = undefined;
+
+    await taskController.getTaskByID(mockReq, mockRes as Response);
+
+    expect(mockRes.status).toHaveBeenCalledWith(401);
+    expect(mockRes.json).toHaveBeenCalledWith({
+      message: "User not authenticated",
+    });
+  });
+
+  it("should return a 400 error if no column id is provided", async () => {
+    await taskController.getTaskByID(mockReq, mockRes as Response);
+
+    expect(mockRes.status).toHaveBeenCalledWith(400);
+    expect(mockRes.json).toHaveBeenCalledWith({
+      message: "No task id provided",
+    });
+  });
+
+  it("should run the correct Prisma query", async () => {
+    mockReq.params.id = "001";
+
+    vi.mocked(prisma.task.findUnique).mockResolvedValue(testTasks[0]);
+
+    await taskController.getTaskByID(mockReq, mockRes as Response);
+
+    expect(mockRes.status).toHaveBeenCalledWith(200);
+    expect(mockRes.json).toHaveBeenCalledWith(testTasks[0]);
+  });
+
+  it("should return 500 when database query fails", async () => {
+    const mockError = new Error("Database connection failed");
+    vi.mocked(prisma.task.findUnique).mockRejectedValue(mockError);
+
+    await taskController.getTaskByID(mockReq, mockRes as Response);
+
+    expect(mockRes.status).toHaveBeenCalledWith(500);
+    expect(mockRes.json).toHaveBeenCalledWith({
+      message: "Error in ticket controller",
+      error: "Database connection failed",
+    });
+  });
+
+  it("handles non-Error objects in error response", async () => {
+    mockReq.user = { id: authenticatedUserId };
+    vi.mocked(prisma.task.findUnique).mockRejectedValue("string error");
+
+    await taskController.getTaskByID(mockReq, mockRes as Response);
+
+    expect(mockRes.status).toHaveBeenCalledWith(500);
+    expect(mockRes.json).toHaveBeenCalledWith({
+      message: "Error in ticket controller",
+      error: "Unknown error",
+    });
+  });
+});
 // describe("POST /task", () => {});
 // describe("PUT /task:id", () => {});
 // describe("PUT /task:id/soft-delete", () => {});
