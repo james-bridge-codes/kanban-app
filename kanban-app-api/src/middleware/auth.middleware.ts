@@ -1,7 +1,7 @@
 // src/middleware/auth.middleware.ts
 import { Request, Response, NextFunction, RequestHandler } from "express";
-import jwt from "jsonwebtoken";
 import { UserPayload } from "../types/auth.types";
+import jwt from "jsonwebtoken";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 
