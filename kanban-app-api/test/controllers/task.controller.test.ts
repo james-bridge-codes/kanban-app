@@ -217,7 +217,7 @@ describe("POST /task", () => {
   });
 
   it("should run the correct Prisma query", async () => {
-    mockReq.params.id = "001";
+    mockReq.body.ticketId = "001";
 
     vi.mocked(prisma.task.create).mockResolvedValue(testTasks[0]);
 
@@ -254,6 +254,80 @@ describe("POST /task", () => {
   });
 });
 
-// describe("PUT /task:id", () => {});
+describe("PUT /task:id", () => {
+  it("should return a 401 error if the user is not authenticated", async () => {
+    mockReq.user = undefined;
+
+    await taskController.updateTask(mockReq, mockRes as Response);
+
+    expect(mockRes.status).toHaveBeenCalledWith(401);
+    expect(mockRes.json).toHaveBeenCalledWith({
+      message: "User not authenticated",
+    });
+  });
+
+  it("should return a 400 error if no task id is provided", async () => {
+    await taskController.updateTask(mockReq, mockRes as Response);
+
+    expect(mockRes.status).toHaveBeenCalledWith(400);
+    expect(mockRes.json).toHaveBeenCalledWith({
+      message: "No ticket id provided",
+    });
+  });
+
+  it("should return a 400 error if no update data is provided", async () => {
+    mockReq.params.id = "001";
+    mockReq.body.title = undefined;
+    mockReq.body.completed = undefined;
+
+    await taskController.updateTask(mockReq, mockRes as Response);
+
+    expect(mockRes.status).toHaveBeenCalledWith(400);
+    expect(mockRes.json).toHaveBeenCalledWith({
+      message: "No update data provided",
+    });
+  });
+
+  it("should run the correct Prisma query", async () => {
+    mockReq.params.id = "001";
+    mockReq.body.completed = true;
+
+    vi.mocked(prisma.task.update).mockResolvedValue(testTasks[0]);
+
+    await taskController.updateTask(mockReq, mockRes as Response);
+
+    expect(mockRes.status).toHaveBeenCalledWith(200);
+    expect(mockRes.json).toHaveBeenCalledWith(testTasks[0]);
+  });
+
+  it("should return 500 when database query fails", async () => {
+    mockReq.params.id = "001";
+    mockReq.body.completed = true;
+    const mockError = new Error("Database connection failed");
+    vi.mocked(prisma.task.update).mockRejectedValue(mockError);
+
+    await taskController.updateTask(mockReq, mockRes as Response);
+
+    expect(mockRes.status).toHaveBeenCalledWith(500);
+    expect(mockRes.json).toHaveBeenCalledWith({
+      message: "Error in ticket controller",
+      error: "Database connection failed",
+    });
+  });
+
+  it("handles non-Error objects in error response", async () => {
+    mockReq.params.id = "001";
+    mockReq.body.completed = true;
+    vi.mocked(prisma.task.update).mockRejectedValue("string error");
+
+    await taskController.updateTask(mockReq, mockRes as Response);
+
+    expect(mockRes.status).toHaveBeenCalledWith(500);
+    expect(mockRes.json).toHaveBeenCalledWith({
+      message: "Error in ticket controller",
+      error: "Unknown error",
+    });
+  });
+});
 // describe("PUT /task:id/soft-delete", () => {});
 // describe("DELETE /task", () => {});

@@ -77,7 +77,7 @@ const taskController: TaskController = {
         res.status(401).json({ message: "User not authenticated" });
       }
 
-      const { id: ticketId } = req.params;
+      const { ticketId: ticketId } = req.body;
 
       if (!ticketId) {
         res.status(400).json({ message: "No ticket id provided" });
@@ -107,7 +107,51 @@ const taskController: TaskController = {
   },
 
   updateTask: async (req: Request, res: Response): Promise<void> => {
-    res.status(200).send("Updating a task");
+    try {
+      const user = req.user;
+
+      if (!user) {
+        res.status(401).json({ message: "User not authenticated" });
+      }
+
+      const { id: ticketId } = req.params;
+
+      if (!ticketId) {
+        res.status(400).json({ message: "No ticket id provided" });
+      }
+
+      const { title, completed } = req.body;
+
+      const updateData: any = {};
+
+      if (title !== undefined) updateData.tite = title;
+      if (completed !== undefined) updateData.completed = completed;
+
+      if (Object.keys(updateData).length === 0) {
+        res.status(400).json({ message: "No update data provided" });
+        return;
+      }
+
+      const result = await prisma.task.update({
+        where: {
+          id: ticketId,
+        },
+        data: updateData,
+        select: {
+          id: true,
+          title: true,
+          completed: true,
+          ticketId: true,
+        },
+      });
+
+      res.status(200).json(result);
+    } catch (error) {
+      res.status(500).json({
+        message: "Error in ticket controller",
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
   },
 
   softDeleteTask: async (req: Request, res: Response): Promise<void> => {
