@@ -151,8 +151,168 @@ describe("GET /ticket", () => {
   });
 });
 
-// describe("GET /ticket:id", () => {});
-// describe("POST /ticket", () => {});
-// describe("PUT /ticket:id", () => {});
+describe("GET /ticket:id", () => {
+  it("should give a 401 error if the user is not authenticated", async () => {
+    mockReq.user = undefined;
+
+    await ticketController.getTicketByID(mockReq, mockRes as Response);
+
+    expect(mockRes.status).toHaveBeenCalledWith(401);
+    expect(mockRes.json).toHaveBeenCalledWith({
+      message: "User not authenticated",
+    });
+  });
+
+  it("should give a 400 error if the ticket id is missing", async () => {
+    mockReq.params.id = "";
+
+    await ticketController.getTicketByID(mockReq, mockRes as Response);
+
+    expect(mockRes.status).toHaveBeenCalledWith(400);
+    expect(mockRes.json).toHaveBeenCalledWith({
+      message: "Ticket id missing",
+    });
+  });
+
+  it("should call prisma with the correct query", async () => {
+    mockReq.params.id = "001";
+
+    vi.mocked(prisma.ticket.findUnique).mockResolvedValue(testTickets[0]);
+
+    await ticketController.getTicketByID(mockReq, mockRes as Response);
+
+    expect(prisma.ticket.findUnique).toHaveBeenCalledWith({
+      where: {
+        id: "001",
+        isDeleted: false,
+      },
+    });
+
+    expect(mockRes.status).toHaveBeenCalledWith(200);
+    expect(mockRes.json).toHaveBeenCalledWith(testTickets[0]);
+  });
+
+  it("should return 500 when database query fails", async () => {
+    const mockError = new Error("Database connection failed");
+    vi.mocked(prisma.ticket.findUnique).mockRejectedValue(mockError);
+
+    await ticketController.getTicketByID(mockReq, mockRes as Response);
+
+    expect(mockRes.status).toHaveBeenCalledWith(500);
+    expect(mockRes.json).toHaveBeenCalledWith({
+      message: "Error in ticket controller",
+      error: "Database connection failed",
+    });
+  });
+
+  it("handles non-Error objects in error response", async () => {
+    mockReq.user = { id: authenticatedUserId };
+    vi.mocked(prisma.ticket.findUnique).mockRejectedValue("string error");
+
+    await ticketController.getTicketByID(mockReq, mockRes as Response);
+
+    expect(mockRes.status).toHaveBeenCalledWith(500);
+    expect(mockRes.json).toHaveBeenCalledWith({
+      message: "Error in ticket controller",
+      error: "Unknown error",
+    });
+  });
+});
+
+describe("POST /ticket", () => {
+  it("should give a 401 error if the user is not authenticated", async () => {
+    mockReq.user = undefined;
+
+    await ticketController.createTicket(mockReq, mockRes as Response);
+
+    expect(mockRes.status).toHaveBeenCalledWith(401);
+    expect(mockRes.json).toHaveBeenCalledWith({
+      message: "User not authenticated",
+    });
+  });
+
+  it("should give a 400 error if no update data is provided", async () => {
+    mockReq.body.columnId = undefined;
+    mockReq.body.title = undefined;
+    mockReq.body.description = undefined;
+
+    await ticketController.updateTicket(mockReq, mockRes as Response);
+
+    expect(mockRes.status).toHaveBeenCalledWith(400);
+    expect(mockRes.json).toHaveBeenCalledWith({
+      message: "No data provided for update",
+    });
+  });
+
+  it("should make the correct Prisma query", async () => {
+    mockReq.body.columnId = "001";
+    mockReq.body.title = "new title";
+    mockReq.body.description = "new description";
+    mockReq.params.id = "ticketid";
+
+    vi.mocked(prisma.ticket.update).mockResolvedValue({
+      columnId: "001",
+      title: "new title",
+      description: "new description",
+    } as any);
+
+    await ticketController.updateTicket(mockReq, mockRes as Response);
+
+    expect(prisma.ticket.update).toHaveBeenCalledWith({
+      where: {
+        id: "ticketid",
+      },
+      data: {
+        columnId: "001",
+        title: "new title",
+        description: "new description",
+      },
+      select: {
+        title: true,
+        description: true,
+        columnId: true,
+      },
+    });
+
+    expect(mockRes.status).toHaveBeenCalledWith(200);
+    expect(mockRes.json).toHaveBeenCalledWith({
+      columnId: "001",
+      title: "new title",
+      description: "new description",
+    });
+  });
+
+  it("should return 500 when database query fails", async () => {
+    const mockError = new Error("Database connection failed");
+    vi.mocked(prisma.ticket.create).mockRejectedValue(mockError);
+
+    await ticketController.createTicket(mockReq, mockRes as Response);
+
+    expect(mockRes.status).toHaveBeenCalledWith(500);
+    expect(mockRes.json).toHaveBeenCalledWith({
+      message: "Error in ticket controller",
+      error: "Database connection failed",
+    });
+  });
+
+  it("handles non-Error objects in error response", async () => {
+    mockReq.user = { id: authenticatedUserId };
+    vi.mocked(prisma.ticket.create).mockRejectedValue("string error");
+
+    await ticketController.createTicket(mockReq, mockRes as Response);
+
+    expect(mockRes.status).toHaveBeenCalledWith(500);
+    expect(mockRes.json).toHaveBeenCalledWith({
+      message: "Error in ticket controller",
+      error: "Unknown error",
+    });
+  });
+});
+
+// describe("PUT /ticket:id", () => {
+
+// });
+
 // describe("PUT /ticket:id/soft-delete", () => {});
+
 // describe("DELETE /ticket:id", () => {});
