@@ -288,8 +288,33 @@ describe("PUT /task:id", () => {
     });
   });
 
-  it("should run the correct Prisma query", async () => {
+  it("should run the correct Prisma query with just completed", async () => {
     mockReq.params.id = "001";
+    mockReq.body.completed = true;
+
+    vi.mocked(prisma.task.update).mockResolvedValue(testTasks[0]);
+
+    await taskController.updateTask(mockReq, mockRes as Response);
+
+    expect(mockRes.status).toHaveBeenCalledWith(200);
+    expect(mockRes.json).toHaveBeenCalledWith(testTasks[0]);
+  });
+
+  it("should run the correct Prisma query with just title", async () => {
+    mockReq.params.id = "001";
+    mockReq.body.title = "new title";
+
+    vi.mocked(prisma.task.update).mockResolvedValue(testTasks[0]);
+
+    await taskController.updateTask(mockReq, mockRes as Response);
+
+    expect(mockRes.status).toHaveBeenCalledWith(200);
+    expect(mockRes.json).toHaveBeenCalledWith(testTasks[0]);
+  });
+
+  it("should run the correct Prisma query with both title and compeleted", async () => {
+    mockReq.params.id = "001";
+    mockReq.body.title = "new title";
     mockReq.body.completed = true;
 
     vi.mocked(prisma.task.update).mockResolvedValue(testTasks[0]);

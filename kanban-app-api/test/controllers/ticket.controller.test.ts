@@ -312,7 +312,7 @@ describe("PUT /ticket:id", () => {
   it("should give a 401 error if the user is not authenticated", async () => {
     mockReq.user = undefined;
 
-    await ticketController.createTicket(mockReq, mockRes as Response);
+    await ticketController.updateTicket(mockReq, mockRes as Response);
 
     expect(mockRes.status).toHaveBeenCalledWith(401);
     expect(mockRes.json).toHaveBeenCalledWith({
