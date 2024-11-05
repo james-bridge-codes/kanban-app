@@ -70,7 +70,40 @@ const taskController: TaskController = {
   },
 
   createTask: async (req: Request, res: Response): Promise<void> => {
-    res.status(200).send("Creating a new task");
+    try {
+      const user = req.user;
+
+      if (!user) {
+        res.status(401).json({ message: "User not authenticated" });
+      }
+
+      const { id: ticketId } = req.params;
+
+      if (!ticketId) {
+        res.status(400).json({ message: "No ticket id provided" });
+      }
+
+      const { title } = req.body;
+
+      if (!title) {
+        res.status(400).json({ message: "No title provided" });
+      }
+
+      const result = await prisma.task.create({
+        data: {
+          title: title,
+          completed: false,
+          ticketId: ticketId,
+        },
+      });
+
+      res.status(200).json(result);
+    } catch (error) {
+      res.status(500).json({
+        message: "Error in ticket controller",
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
   },
 
   updateTask: async (req: Request, res: Response): Promise<void> => {
