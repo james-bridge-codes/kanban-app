@@ -14,7 +14,6 @@ router.post("/", taskController.createTask);
 router.put("/:id", taskController.updateTask);
 
 // DELETE TASKS
-router.put("/soft-delete/:id", taskController.softDeleteTask);
 router.delete("/hard-delete/:id", taskController.hardDeleteTask);
 
 export default router;

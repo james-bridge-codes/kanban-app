@@ -15,11 +15,18 @@ const authController: AuthController = {
     try {
       const { email, password, name } = req.body;
 
+      // Check that we have the required data
+      if (!email || !password || !name) {
+        res.status(400).json({ message: "missing data in fields" });
+        return;
+      }
+
       // Check if user exists
       const existingUser = await prisma.user.findUnique({
         where: { email },
       });
 
+      // Reject if user already has an account
       if (existingUser) {
         res.status(400).json({ message: "Email already registered" });
         return;

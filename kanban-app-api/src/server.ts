@@ -32,6 +32,10 @@ app.use("/api/v1/column", columnRoutes);
 app.use("/api/v1/ticket", ticketRoutes);
 app.use("/api/v1/task", taskRoutes);
 
-app.listen(port, () => {
-  console.log(`[server]: Server is running on port ${port}`);
-});
+export default app;
+
+if (require.main === module) {
+  app.listen(port, () => {
+    console.log(`Server running on port ${port}`);
+  });
+}
