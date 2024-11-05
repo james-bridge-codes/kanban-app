@@ -12,21 +12,35 @@ datasource db {
 
 // USERS
 model User {
-  id       String  @id @default(uuid())
-  email    String  @unique
-  name     String?
-  password String
-  boards   Board[]
+  id          String        @id @default(uuid())
+  email       String        @unique
+  name        String?
+  password    String
+  boards      Board[]
+  BoardAccess BoardAccess[]
 }
 
 // BOARDS
 model Board {
-  id        String   @id @default(uuid())
-  title     String
-  isDeleted Boolean
-  columns   Column[]
-  User      User     @relation(fields: [userId], references: [id])
-  userId    String
+  id          String        @id @default(uuid())
+  title       String
+  isDeleted   Boolean
+  columns     Column[]
+  User        User          @relation(fields: [userId], references: [id])
+  userId      String
+  BoardAccess BoardAccess[]
+}
+
+// ACCESS CONTROL
+model BoardAccess {
+  id      String @id @default(uuid())
+  user    User   @relation(fields: [userId], references: [id])
+  userId  String
+  board   Board  @relation(fields: [boardId], references: [id])
+  boardId String
+  role    String // e.g., "ADMIN", "EDITOR", "VIEWER"
+
+  @@unique([userId, boardId])
 }
 
 // Columns

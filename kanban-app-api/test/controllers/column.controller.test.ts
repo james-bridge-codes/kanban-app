@@ -20,14 +20,6 @@ let authenticatedUserId: string;
 let mockReq: Request;
 let mockRes: Partial<Response>;
 
-const testBoard = {
-  id: "001",
-  title: "board one",
-  isDeleted: false,
-  columns: [],
-  userId: "test-user-id",
-};
-
 const testColumns = [
   {
     id: "001",
