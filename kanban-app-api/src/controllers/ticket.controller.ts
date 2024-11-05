@@ -97,9 +97,9 @@ const ticketController: TicketController = {
           columnId: columnId,
         },
         select: {
-          title,
-          description,
-          columnId,
+          title: true,
+          description: true,
+          columnId: true,
         },
       });
 
@@ -156,11 +156,62 @@ const ticketController: TicketController = {
   },
 
   softDeleteTicket: async (req: Request, res: Response): Promise<void> => {
-    res.status(200).send("Soft deleting a ticket");
+    try {
+      const user = req.user;
+      const { id: ticketId } = req.params;
+
+      if (!user) {
+        res.status(401).json({ message: "User not authenticated" });
+      }
+
+      if (!ticketId) {
+        res.status(400).json({ message: "No ticket id provided" });
+      }
+
+      await prisma.ticket.update({
+        where: {
+          id: ticketId,
+        },
+        data: {
+          isDeleted: true,
+        },
+      });
+
+      res.status(200).json({ message: "ticket deleted" });
+    } catch (error) {
+      res.status(500).json({
+        message: "Error in ticket controller",
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
   },
 
   hardDeleteTicket: async (req: Request, res: Response): Promise<void> => {
-    res.status(200).send("Hard deleting a ticket");
+    try {
+      const user = req.user;
+      const { id: ticketId } = req.params;
+
+      if (!user) {
+        res.status(401).json({ message: "User not authenticated" });
+      }
+
+      if (!ticketId) {
+        res.status(400).json({ message: "No ticket id" });
+      }
+
+      await prisma.ticket.delete({
+        where: {
+          id: ticketId,
+        },
+      });
+
+      res.status(204).json({ message: "ticket deleted" });
+    } catch (error) {
+      res.status(500).json({
+        message: "Error in ticket controller",
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
   },
 };
 
