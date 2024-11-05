@@ -69,7 +69,6 @@ model Task {
   id        String  @id @default(uuid())
   title     String
   completed Boolean
-  isDeleted Boolean
   Ticket    Ticket  @relation(fields: [ticketId], references: [id])
   ticketId  String
 }
