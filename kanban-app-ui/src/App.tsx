@@ -1,5 +1,7 @@
+import AppShell from "./components/AppShell/AppShell";
+
 const App = () => {
-  return <div>Hello and welcome to the app</div>;
+  return <AppShell />;
 };
 
 export default App;
